@@ -1,21 +1,22 @@
 open System
 
 let part1 (numbers : int seq) =
-    let a, b = Seq.allPairs numbers numbers |> Seq.find (fun (x, y) -> x + y = 2020) in
-    a * b
+    Seq.head (seq {
+        for x in numbers do
+        for y in numbers do
+        if x + y = 2020 then
+            yield x * y
+    })
 
 let part2 (numbers : int seq) =
-    let generateCombinationsOf3 l = seq {
-        for x in l do
-        for y in l do
-        for z in l do
-        yield x, y, z
-    }
-    let a, b, c = generateCombinationsOf3 numbers |> Seq.find (fun (x, y, z) -> x + y + z = 2020) in
-    a * b * c
+    Seq.head (seq {
+        for x in numbers do
+        for y in numbers do
+        for z in numbers do
+        if x + y + z = 2020 then
+            yield x * y * z
+    })
     
-    
-
 
 [<EntryPoint>]
 let main _ =
