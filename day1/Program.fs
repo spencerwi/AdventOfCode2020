@@ -24,5 +24,5 @@ let main _ =
     let lines = input.Split '\n' |> Array.filter (String.IsNullOrEmpty >> not) in
     let numbers = lines |> Array.map Int32.Parse |> Seq.ofArray in
     printfn "Day 1A: %d" (part1 numbers)
-    printfn "Day 2A: %d" (part2 numbers)
+    printfn "Day 1B: %d" (part2 numbers)
     0
