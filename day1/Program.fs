@@ -20,9 +20,11 @@ let part2 (numbers : int seq) =
 
 [<EntryPoint>]
 let main _ =
-    let input = IO.File.ReadAllText "input.txt" in
-    let lines = input.Split '\n' |> Array.filter (String.IsNullOrEmpty >> not) in
-    let numbers = lines |> Array.map Int32.Parse |> Seq.ofArray in
+    let numbers = seq {
+        for line in IO.File.ReadAllLines "input.txt" do
+        if not (String.IsNullOrEmpty line) then
+            yield int line
+    }
     printfn "Day 1A: %d" (part1 numbers)
     printfn "Day 1B: %d" (part2 numbers)
     0
