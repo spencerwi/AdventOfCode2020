@@ -1,3 +1,4 @@
+open System
 open System.Text.RegularExpressions
 
 module Height = begin
@@ -49,7 +50,7 @@ module Passport = begin
     let parseInputFile filename =
         let input = System.IO.File.ReadAllText "input.txt" in
         Regex.Split(input, "\n\n", RegexOptions.Multiline) // each passport is multiline, separated by blank lines
-        |> Array.map (String.split ["\n"] >> Seq.filter (fun l -> l <> ""))
+        |> Array.map (fun group -> group.Split("\n", StringSplitOptions.RemoveEmptyEntries) |> Seq.ofArray)
         |> Array.map parsePassport
 
 
