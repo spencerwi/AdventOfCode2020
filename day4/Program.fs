@@ -1,5 +1,7 @@
 open System.Text.RegularExpressions
 
+open Microsoft.FSharp.Reflection
+
 open FSharpPlus
 
 module Height = begin
@@ -27,7 +29,7 @@ module Passport = begin
         cid: string option
     }
 
-    let parse (lines : string array) = 
+    let parsePassport (lines : string seq) = 
         let inputLine = String.concat " " lines in
         let fields = inputLine.Split ' ' in
         // convert the key:value strings into a true map 
@@ -47,6 +49,13 @@ module Passport = begin
             pid = Map.tryFind "pid" fieldMapping
             cid = Map.tryFind "cid" fieldMapping
         }
+
+    let parseInputFile filename =
+        let input = System.IO.File.ReadAllText "input.txt" in
+        Regex.Split(input, "\n\n", RegexOptions.Multiline) // each passport is multiline, separated by blank lines
+        |> Array.map (String.split ["\n"] >> Seq.filter (fun l -> l <> ""))
+        |> Array.map parsePassport
+
 
     let hasAllRequiredFields passport = 
         not (
@@ -87,23 +96,26 @@ end
 
 (** Since the part 2 solution uses the results of part 1, we just have a single
  * "solve" method that returns a tuple of the two parts' answers *)
-let solve (lines : string array) =
-    let passportsThatHaveAllRequiredFields = 
-        lines
-        |> Array.split [ [|""|] ] // each passport is multiline, separated by blank lines
-        |> Seq.map Passport.parse
-        |> Seq.filter Passport.hasAllRequiredFields
-    let part1Solution = Seq.length passportsThatHaveAllRequiredFields
-    let part2Solution =
-        passportsThatHaveAllRequiredFields
-        |> Seq.filter Passport.allFieldValuesAreValid
-        |> Seq.length
+let solve (filename : string) =
+    let allPassports = Passport.parseInputFile filename 
+    // This is more straightforward to read as a filter, then another filter, but it's more 
+    // efficient as a single fold, since we only need to iterate once.
+    let part1Solution, part2Solution = 
+        allPassports
+        |> Seq.fold (fun (fieldsPresentCount, validFieldsCount) passport ->
+            if Passport.hasAllRequiredFields passport then
+                if Passport.allFieldValuesAreValid passport then 
+                    (fieldsPresentCount + 1, validFieldsCount + 1)
+                else
+                    (fieldsPresentCount + 1, validFieldsCount)
+            else
+                (fieldsPresentCount, validFieldsCount)
+        ) (0, 0)
     (part1Solution, part2Solution)
 
 [<EntryPoint>]
 let main _ =
-    let lines = System.IO.File.ReadAllLines "input.txt" in
-    let part1Solution, part2Solution = solve lines in
+    let part1Solution, part2Solution = solve "input.txt" in
     printfn "Day 4A: %d" part1Solution
     printfn "Day 4B: %d" part2Solution
     0
