@@ -1,9 +1,5 @@
 open System.Text.RegularExpressions
 
-open Microsoft.FSharp.Reflection
-
-open FSharpPlus
-
 module Height = begin
     type T = 
         | Centimeters of int
