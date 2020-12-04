@@ -47,12 +47,14 @@ module Passport = begin
             cid = Map.tryFind "cid" fieldMapping
         }
 
-    let parseInputFile filename =
-        let input = System.IO.File.ReadAllText "input.txt" in
+    let parseMultiple input =
         Regex.Split(input, "\n\n", RegexOptions.Multiline) // each passport is multiline, separated by blank lines
         |> Array.map (fun group -> group.Split("\n", StringSplitOptions.RemoveEmptyEntries) |> Seq.ofArray)
         |> Array.map parsePassport
 
+    let parseInputFile filename =
+        let input = System.IO.File.ReadAllText "input.txt" in
+        parseMultiple input
 
     let hasAllRequiredFields passport = 
         not (
