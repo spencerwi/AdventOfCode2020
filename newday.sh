@@ -24,7 +24,7 @@ let part2 (input : string) =
 
 [<EntryPoint>]
 let main _ =
-	let input = IO.File.ReadAllText "input.txt" in
+    let input = IO.File.ReadAllText "input.txt" in
     printfn "Day $1A: %s" (part1 input)
 //    printfn "Day $1B: %s" (part2 input)
     0
