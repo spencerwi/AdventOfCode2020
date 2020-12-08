@@ -1,37 +1,39 @@
 open System
 open System.Text.RegularExpressions
 
+/// <summary>
+/// Like (+) but for pairs. 
+/// </summary>
+/// <returns>
+/// (a1 + b1, a2 + b2)
+/// </returns>
+let addPair (a1, a2) (b1, b2) =
+    (a1 + b1, a2 + b2)
+
 let solve (input : string) =
     let groups = 
         Regex.Split(input, "\n\n", RegexOptions.Multiline)
         |> Array.map (fun group -> group.Split("\n", StringSplitOptions.RemoveEmptyEntries))
     in
-    let groupsWithEachVoterAsASet = 
-        seq {
-            for group in groups do
-                let groupWithEachVoterAsASet = seq {
-                    for voter in group do
-                        yield Set.ofSeq (seq {
-                            for questionVoterAnsweredYesTo in voter do
-                                if not (Char.IsWhiteSpace questionVoterAnsweredYesTo) then
-                                    yield questionVoterAnsweredYesTo
-                        })
-                }
-                yield groupWithEachVoterAsASet
-        }
-    let groupCountsOfAllQuestionsAnyoneAnsweredYesTo =
-        seq {
-            for group in groupsWithEachVoterAsASet do
-                yield (Set.unionMany group |> Set.count)
-        }
-    let part1Solution = Seq.sum groupCountsOfAllQuestionsAnyoneAnsweredYesTo in
-    let groupCountsOfAllQuestionsEveryoneAnsweredYesTo =
-        seq {
-            for group in groupsWithEachVoterAsASet do
-                yield (Set.intersectMany group |> Set.count)
-        }
-    let part2Solution = Seq.sum groupCountsOfAllQuestionsEveryoneAnsweredYesTo in
-    (part1Solution, part2Solution)
+    let groupTotals = seq {
+        for group in groups do
+            // We want each voter's yes responses as a set so we can unionMany and intersectMany.
+            let eachVoterAsSet = seq {
+                for voter in group do
+                    let questionsVoterAnsweredYesTo = 
+                        voter 
+                        |> String.filter (not << Char.IsWhiteSpace) 
+                        |> Set.ofSeq
+                    in yield questionsVoterAnsweredYesTo
+            } 
+            let questionsAtLeastOnePersonAnsweredYesTo = Set.unionMany eachVoterAsSet |> Set.count in
+            let questionsEveryoneAnsweredYesTo = Set.intersectMany eachVoterAsSet |> Set.count in
+            yield (
+                questionsAtLeastOnePersonAnsweredYesTo,
+                questionsEveryoneAnsweredYesTo
+            )
+    }
+    Seq.fold addPair (0,0) groupTotals 
 
 [<EntryPoint>]
 let main _ =
