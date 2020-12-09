@@ -4,6 +4,25 @@ open System
 // enough to solve the problem. It'd be better to quit calling "tail" so 
 // many times and just slide a window or use slicing. Still, this runs
 // quickly enough, so it's good enough for me.
+//
+
+/// Efficiently finds both the min *and* max of an array in one pass
+let arrayMinAndMax arr = 
+    let (min, max) = 
+        Array.fold (fun (min, max) next -> 
+            let newMin = 
+                match min with
+                | None -> Some next
+                | Some existingMin -> Some (Seq.min [existingMin; next])
+            let newMax =
+                match max with
+                | None -> Some next
+                | Some existingMax -> Some (Seq.max [existingMax; next])
+            (newMin, newMax)
+        ) (None, None) arr
+    match (min, max) with
+    | (None, _) | (_, None) -> failwith "Something went wrong: could not determine max or min!"
+    | (Some min, Some max) -> (min, max)
 
 module XMASDecryption = begin
     let isValidNextNumber (incomingNumber : int64) (window : int64 seq) =
@@ -39,7 +58,8 @@ let solve (lines : int64 seq) =
                 if (Seq.sum subsequence) = invalidNumber then
                     contiguousSetThatAddsUp <- Some subsequence
 
-    let encryptionWeakness = (Array.min <| Option.get contiguousSetThatAddsUp) + (Array.max <| Option.get contiguousSetThatAddsUp) in
+    let (smallest, largest) = arrayMinAndMax (Option.get contiguousSetThatAddsUp) in
+    let encryptionWeakness = smallest + largest in
     (invalidNumber, encryptionWeakness)
 
 [<EntryPoint>]
