@@ -10,6 +10,10 @@ module Seating = begin
             col >= 0 && col < (Array2D.length2 seatingGrid)
         )
 
+    let isSeat = function
+        | '#' | 'L' -> true
+        | _ -> false
+
     let getAdjacentSpots (row, col) seatingGrid =
         seq {
             for i in (row - 1) .. (row + 1) do
@@ -19,15 +23,41 @@ module Seating = begin
                             yield (i, j)
         }
 
-    let isOccupiedSeat (seatingGrid : Grid) (row, col) =
-        seatingGrid.[row, col] = '#'
-
     let countAdjacentOccupiedSeats (seatingGrid : Grid) (row, col) =
         getAdjacentSpots (row, col) seatingGrid
-        |> Seq.filter (fun (x, y) -> isOccupiedSeat seatingGrid (x, y))
+        |> Seq.map (fun (row, col) -> seatingGrid.[row, col])
+        |> Seq.filter (fun spot -> spot = '#')
         |> Seq.length
 
-    let step (grid : Grid) : Grid =
+    let getVisibleSeats (row, col) seatingGrid =
+        let directionsToSearch = [
+            (-1, -1); (-1, 0); (-1, 1);
+            (0,  -1);          ( 0, 1);
+            (1,  -1); ( 1, 0); ( 1, 1)
+        ]
+        let rec searchInDirection (dRow, dCol) (spotRow, spotCol) =
+            let adjacentSpot = (spotRow + dRow, spotCol + dCol) in
+            if not (doesSeatExist seatingGrid adjacentSpot) then
+                None
+            else
+                let adjacentValue = seatingGrid.[spotRow + dRow, spotCol + dCol] in
+                if isSeat adjacentValue then
+                    Some adjacentSpot
+                else
+                    searchInDirection (dRow, dCol) (spotRow + dRow, spotCol + dCol)
+        in
+        directionsToSearch
+        |> Seq.map (fun d -> searchInDirection d (row, col))
+        |> Seq.filter Option.isSome
+        |> Seq.map Option.get
+
+    let countVisibleOccupiedSeats (seatingGrid : Grid) (row, col) =
+        getVisibleSeats (row, col) seatingGrid
+        |> Seq.map (fun (row, col) -> seatingGrid.[row, col])
+        |> Seq.filter (fun spot -> spot = '#')
+        |> Seq.length
+
+    let step1 (grid : Grid) : Grid =
         grid
         |> Array2D.mapi (fun row col spot ->
             let adjacentOccupiedSeats = countAdjacentOccupiedSeats grid (row, col) in
@@ -37,27 +67,40 @@ module Seating = begin
             | _ -> spot 
         )
 
+    let step2 (grid : Grid) : Grid =
+        grid
+        |> Array2D.mapi (fun row col spot ->
+            let visibleOccupiedSeats = countVisibleOccupiedSeats grid (row, col) in
+            match spot with
+            | 'L' when visibleOccupiedSeats = 0 ->  '#'
+            | '#' when visibleOccupiedSeats >= 5 -> 'L'
+            | _ -> spot 
+        )
+
     let countAllOccupiedSeats (seatingGrid : Grid) =
-        printfn "%A" seatingGrid
         Seq.length (seq {
             for spot in Seq.cast<char> seatingGrid do
                 if spot = '#' then yield spot
         })
 
+    let runUntilStable (seatingGrid : Grid) (stepper : Grid -> Grid) =
+        let mutable currentGrid = seatingGrid in
+        let mutable stablePointFound = false in
+        while not stablePointFound do
+            let newGrid = stepper currentGrid in
+            stablePointFound <- (newGrid = currentGrid)
+            currentGrid <- newGrid
+        currentGrid
+
 end
 
 let part1 (seatingGrid : Seating.Grid) =
-    let mutable currentGrid = seatingGrid in
-    let mutable stablePointFound = false in
-    while not stablePointFound do
-        let newGrid = Seating.step currentGrid in
-        stablePointFound <- (newGrid = currentGrid)
-        currentGrid <- newGrid
-    Seating.countAllOccupiedSeats currentGrid
-
+    let stableGrid = Seating.runUntilStable seatingGrid Seating.step1
+    Seating.countAllOccupiedSeats stableGrid
 
 let part2 (seatingGrid : Seating.Grid) =
-    "not yet implemented!"
+    let stableGrid = Seating.runUntilStable seatingGrid Seating.step2
+    Seating.countAllOccupiedSeats stableGrid
 
 [<EntryPoint>]
 let main _ =
@@ -66,5 +109,5 @@ let main _ =
              line.ToCharArray() 
     ]
     printfn "Day 11A: %d" (part1 seatingGrid)
-//    printfn "Day 11B: %s" (part2 input)
+    printfn "Day 11B: %d" (part2 seatingGrid)
     0
