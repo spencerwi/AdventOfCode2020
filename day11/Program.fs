@@ -20,13 +20,13 @@ module Seating = begin
     /// that are actually in-bounds on the grid.
     /// </returns>
     let getAdjacentSpots (row, col) seatingGrid =
-        seq {
-            for i in (row - 1) .. (row + 1) do
-                for j in (col - 1) .. (col + 1) do
-                    if doesSeatExist seatingGrid (i, j) then
-                        if (i, j) <> (row, col) then
-                            yield (i, j)
-        }
+        [
+            (-1, -1); (-1, 0); (-1, 1);
+            (0,  -1);          ( 0, 1);
+            (1,  -1); ( 1, 0); ( 1, 1)
+        ] 
+        |> Seq.map (fun (dRow, dCol) -> (row + dRow, col + dCol))
+        |> Seq.filter (doesSeatExist seatingGrid)
 
     /// <returns>
     /// The number of immediately-adjacent spots that are occupied seats.
