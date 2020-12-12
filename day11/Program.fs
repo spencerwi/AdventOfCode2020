@@ -16,7 +16,7 @@ module Seating = begin
         | _ -> false
 
     /// <returns>
-    /// All immediately-adjacent locations for a given (row, col) point 
+    /// All immediately-adjacent spots for a given (row, col) point 
     /// that are actually in-bounds on the grid.
     /// </returns>
     let getAdjacentSpots (row, col) seatingGrid =
@@ -29,7 +29,8 @@ module Seating = begin
         |> Seq.filter (doesSeatExist seatingGrid)
 
     /// <returns>
-    /// The number of immediately-adjacent spots that are occupied seats.
+    /// The number of <see cref="getAdjacentSpots">immediately-adjacent spots</see> 
+    /// that are occupied seats.
     /// </returns>
     let countAdjacentOccupiedSeats (seatingGrid : Grid) (row, col) =
         getAdjacentSpots (row, col) seatingGrid
@@ -48,7 +49,7 @@ module Seating = begin
             (0,  -1);          ( 0, 1);
             (1,  -1); ( 1, 0); ( 1, 1)
         ]
-        let rec searchInDirection (dRow, dCol) (spotRow, spotCol) =
+        let rec searchInDirection (spotRow, spotCol) (dRow, dCol) =
             let adjacentSpot = (spotRow + dRow, spotCol + dCol) in
             if not (doesSeatExist seatingGrid adjacentSpot) then
                 None
@@ -60,13 +61,13 @@ module Seating = begin
                     searchInDirection (dRow, dCol) (spotRow + dRow, spotCol + dCol)
         in
         directionsToSearch
-        |> Seq.map (fun d -> searchInDirection d (row, col))
+        |> Seq.map (searchInDirection (row, col))
         |> Seq.filter Option.isSome
         |> Seq.map Option.get
 
     /// <returns>
-    /// The number of seats visible from a given spot (see getVisibleSeats) that 
-    /// are occupied.
+    /// The number of <see cref="getVisibleSeats">seats visible from a given spot</see> 
+    /// that are occupied.
     /// </returns>
     let countVisibleOccupiedSeats (seatingGrid : Grid) (row, col) =
         getVisibleSeats (row, col) seatingGrid
